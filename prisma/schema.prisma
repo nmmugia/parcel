@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(RESELLER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi
+  transactions Transaction[] @relation("UserTransactions")
+  payments     Payment[]     @relation("UserPayments")
+}
+
+model PackageType {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  icon        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relasi
+  packages    Package[] @relation("PackageTypePackages")
+}
+
+model Package {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  imageUrl      String?
+  tenorMonths   Int
+  monthlyAmount Float
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relasi
+  packageTypeId String
+  packageType   PackageType @relation("PackageTypePackages", fields: [packageTypeId], references: [id])
+  transactions  Transaction[] @relation("PackageTransactions")
+}
+
+model Transaction {
+  id              String    @id @default(cuid())
+  customerName    String
+  customerPhone   String
+  customerAddress String?
+  totalAmount     Float
+  tenorMonths     Int
+  monthlyAmount   Float
+  status          TransactionStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relasi
+  packageId       String
+  package         Package   @relation("PackageTransactions", fields: [packageId], references: [id])
+  resellerId      String
+  reseller        User      @relation("UserTransactions", fields: [resellerId], references: [id])
+  payments        Payment[] @relation("TransactionPayments")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  paymentMethod PaymentMethod
+  proofImageUrl String?
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  resellerBonus Float?
+  adminBonus    Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relasi
+  transactionId String
+  transaction   Transaction   @relation("TransactionPayments", fields: [transactionId], references: [id])
+  resellerId    String
+  reseller      User          @relation("UserPayments", fields: [resellerId], references: [id])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+enum Role {
+  ADMIN
+  RESELLER
+}
+
+enum TransactionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
