@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react"
 
 const loginSchema = z.object({
   email: z.string().email("Email tidak valid"),
-  password: z.string().min(6, "Password minimal 6 karakter"),
+  password: z.string().min(1, "Password wajib diisi"),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -52,17 +52,27 @@ export function LoginForm() {
           title: "Login gagal",
           description: "Email atau password salah",
         })
+        setIsLoading(false)
         return
       }
 
-      router.refresh()
+      // Redirect berdasarkan role
+      const res = await fetch("/api/auth/session")
+      const session = await res.json()
+
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin/dashboard")
+      } else if (session?.user?.role === "RESELLER") {
+        router.push("/reseller/dashboard")
+      } else {
+        router.push("/")
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Terjadi kesalahan",
         description: "Silakan coba lagi nanti",
       })
-    } finally {
       setIsLoading(false)
     }
   }

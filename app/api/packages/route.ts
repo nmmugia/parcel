@@ -50,3 +50,33 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const isActive = searchParams.get("isActive")
+
+    const whereClause: any = {}
+
+    if (isActive === "true") {
+      whereClause.isActive = true
+    } else if (isActive === "false") {
+      whereClause.isActive = false
+    }
+
+    const packages = await db.package.findMany({
+      where: whereClause,
+      include: {
+        packageType: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    return NextResponse.json(packages)
+  } catch (error) {
+    console.error("Error fetching packages:", error)
+    return NextResponse.json({ error: "Terjadi kesalahan saat mengambil paket" }, { status: 500 })
+  }
+}
+
