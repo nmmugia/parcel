@@ -42,7 +42,7 @@ export async function GET() {
       data: {
         name: "Paket Uang",
         description: "Paket pinjaman uang dengan cicilan",
-        icon: "banknote",
+        icon: "Banknote",
       },
     })
 
@@ -50,7 +50,7 @@ export async function GET() {
       data: {
         name: "Paket Makanan",
         description: "Paket makanan dengan cicilan",
-        icon: "utensils",
+        icon: "Utensils",
       },
     })
 
@@ -77,9 +77,19 @@ export async function GET() {
       },
     })
 
+    // Buat pengaturan bonus
+    await db.setting.create({
+      data: {
+        key: "bonus_rates",
+        value: JSON.stringify({
+          resellerBonusRate: 0.05,
+          adminBonusRate: 0.05,
+        }),
+      },
+    })
+
     return NextResponse.json({ message: "Database berhasil diisi dengan data awal" })
   } catch (error) {
-    console.error("Error seeding database:", error)
     return NextResponse.json({ error: "Terjadi kesalahan saat mengisi database" }, { status: 500 })
   }
 }

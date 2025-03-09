@@ -40,3 +40,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const packageTypes = await db.packageType.findMany({
+      orderBy: {
+        name: "asc",
+      },
+    })
+
+    return NextResponse.json(packageTypes)
+  } catch (error) {
+    console.error("Error fetching package types:", error)
+    return NextResponse.json({ error: "Terjadi kesalahan saat mengambil jenis paket" }, { status: 500 })
+  }
+}
+

@@ -63,3 +63,34 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const resellers = await db.user.findMany({
+      where: {
+        role: "RESELLER",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    return NextResponse.json(resellers)
+  } catch (error) {
+    console.error("Error fetching resellers:", error)
+    return NextResponse.json({ error: "Terjadi kesalahan saat mengambil reseller" }, { status: 500 })
+  }
+}
+
