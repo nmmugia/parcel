@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           amount: validatedData.monthlyAmount,
           paymentMethod: "TRANSFER", // Default ke transfer
           dueDate,
-          status: i === 0 ? "PENDING" : "PENDING", // Pembayaran pertama pending, sisanya pending
+          status: "WAITING_FOR_PAYMENT", // Status awal adalah menunggu pembayaran
           transactionId: transaction.id,
           resellerId: validatedData.resellerId,
           // Bonus akan dihitung saat pembayaran disetujui
@@ -97,62 +97,6 @@ export async function POST(request: NextRequest) {
 
     console.error("Error creating transaction:", error)
     return NextResponse.json({ error: "Terjadi kesalahan saat membuat transaksi" }, { status: 500 })
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get("status")
-
-    const whereClause: any = {}
-
-    // Filter berdasarkan role
-    if (session.user.role === "RESELLER") {
-      whereClause.resellerId = session.user.id
-    }
-
-    // Filter berdasarkan status
-    if (status && ["ACTIVE", "COMPLETED", "CANCELLED"].includes(status)) {
-      whereClause.status = status
-    }
-
-    const transactions = await db.transaction.findMany({
-      where: whereClause,
-      include: {
-        package: {
-          include: {
-            packageType: true,
-          },
-        },
-        payments: {
-          orderBy: {
-            dueDate: "asc",
-          },
-        },
-        reseller: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
-
-    return NextResponse.json(transactions)
-  } catch (error) {
-    console.error("Error fetching transactions:", error)
-    return NextResponse.json({ error: "Terjadi kesalahan saat mengambil transaksi" }, { status: 500 })
   }
 }
 

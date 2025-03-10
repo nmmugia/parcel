@@ -13,11 +13,18 @@ interface AdminPaymentListProps {
 export function AdminPaymentList({ payments }: AdminPaymentListProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "PENDING":
+      case "WAITING_FOR_PAYMENT":
         return (
           <Badge variant="outline" className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Menunggu
+            Menunggu Pembayaran
+          </Badge>
+        )
+      case "WAITING_FOR_APPROVAL":
+        return (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Menunggu Persetujuan
           </Badge>
         )
       case "APPROVED":
@@ -86,7 +93,7 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
               <span className="text-sm text-muted-foreground">Belum ada bukti pembayaran</span>
             )}
           </div>
-          {payment.status === "PENDING" && payment.proofImageUrl && (
+          {payment.status === "WAITING_FOR_APPROVAL" && payment.proofImageUrl && (
             <div className="mt-2">
               <Link href={`/admin/payments/${payment.id}`}>
                 <Button size="sm" className="w-full">

@@ -23,7 +23,7 @@ export default async function ResellerDashboardPage() {
   const pendingPayments = await db.payment.count({
     where: {
       resellerId: session.user.id,
-      status: "PENDING",
+      status: "WAITING_FOR_PAYMENT",
       proofImageUrl: null,
     },
   })
@@ -56,7 +56,7 @@ export default async function ResellerDashboardPage() {
       package: true,
       payments: {
         where: {
-          status: "PENDING",
+          status: "WAITING_FOR_PAYMENT",
           proofImageUrl: null,
         },
         orderBy: {

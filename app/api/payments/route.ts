@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter berdasarkan status
-    if (status && ["PENDING", "APPROVED", "REJECTED"].includes(status)) {
+    if (status && ["WAITING_FOR_APPROVAL", "APPROVED", "REJECTED"].includes(status)) {
       whereClause.status = status
     }
 

@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
   // Pembayaran yang menunggu persetujuan
   const pendingPayments = await db.payment.count({
     where: {
-      status: "PENDING",
+      status: "WAITING_FOR_APPROVAL",
       proofImageUrl: {
         not: null,
       },
@@ -73,7 +73,7 @@ export default async function AdminDashboardPage() {
   // Pembayaran yang menunggu persetujuan
   const pendingApprovalPayments = await db.payment.findMany({
     where: {
-      status: "PENDING",
+      status: "WAITING_FOR_APPROVAL",
       proofImageUrl: {
         not: null,
       },

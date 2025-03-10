@@ -22,9 +22,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Pembayaran tidak ditemukan" }, { status: 404 })
     }
 
-    // Verifikasi bahwa pembayaran belum diproses
-    if (payment.status !== "PENDING") {
-      return NextResponse.json({ error: "Pembayaran ini sudah diproses sebelumnya" }, { status: 400 })
+    // Verifikasi bahwa pembayaran menunggu persetujuan
+    if (payment.status !== "WAITING_FOR_APPROVAL") {
+      return NextResponse.json({ error: "Pembayaran ini tidak dalam status menunggu persetujuan" }, { status: 400 })
     }
 
     // Update pembayaran

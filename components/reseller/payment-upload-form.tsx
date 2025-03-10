@@ -2,13 +2,15 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import type { Payment } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { Loader2, Upload, X, ImageIcon } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, Check } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 
 interface PaymentUploadFormProps {
   payment: Payment
@@ -23,6 +25,13 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("TRANSFER")
+  const [mounted, setMounted] = useState(false)
+
+  // Fix hydration issues by only rendering client-side content after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -68,7 +77,7 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
   }
 
   const handleSubmit = async () => {
-    if (!imageFile) {
+    if (paymentMethod === "TRANSFER" && !imageFile) {
       toast({
         variant: "destructive",
         title: "Bukti pembayaran wajib diunggah",
@@ -80,22 +89,27 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
     setIsSubmitting(true)
 
     try {
-      // Upload gambar
-      const formData = new FormData()
-      formData.append("file", imageFile)
+      let proofImageUrl = null
 
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
+      // Upload image only for TRANSFER method
+      if (paymentMethod === "TRANSFER" && imageFile) {
+        // Upload gambar
+        const formData = new FormData()
+        formData.append("file", imageFile)
 
-      if (!uploadResponse.ok) {
-        const error = await uploadResponse.json()
-        throw new Error(error.message || "Terjadi kesalahan saat mengunggah bukti pembayaran")
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          const error = await uploadResponse.json()
+          throw new Error(error.message || "Terjadi kesalahan saat mengunggah bukti pembayaran")
+        }
+
+        const uploadData = await uploadResponse.json()
+        proofImageUrl = uploadData.fileUrl
       }
-
-      const uploadData = await uploadResponse.json()
-      const proofImageUrl = uploadData.fileUrl
 
       // Update pembayaran
       const response = await fetch(`/api/payments/${payment.id}/upload-proof`, {
@@ -106,6 +120,7 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
         body: JSON.stringify({
           proofImageUrl,
           transactionId,
+          paymentMethod,
         }),
       })
 
@@ -116,7 +131,8 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
 
       toast({
         title: "Berhasil",
-        description: "Bukti pembayaran berhasil diunggah",
+        description:
+          paymentMethod === "TRANSFER" ? "Bukti pembayaran berhasil diunggah" : "Pembayaran tunai berhasil dicatat",
       })
 
       onSuccess()
@@ -131,11 +147,22 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
     }
   }
 
+  // Don't render anything until client-side hydration is complete
+  if (!mounted) {
+    return null
+  }
+
+  const isRejected = payment.status === "REJECTED"
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Unggah Bukti Pembayaran</CardTitle>
-        <CardDescription>Unggah bukti pembayaran untuk cicilan {formatDate(payment.dueDate)}</CardDescription>
+        <CardTitle>{isRejected ? "Unggah Ulang Bukti Pembayaran" : "Unggah Bukti Pembayaran"}</CardTitle>
+        <CardDescription>
+          {isRejected
+            ? "Pembayaran sebelumnya ditolak. Silakan unggah bukti pembayaran baru."
+            : `Unggah bukti pembayaran untuk cicilan ${formatDate(payment.dueDate)}`}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg bg-muted p-4">
@@ -149,55 +176,94 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Bukti Pembayaran</span>
-            {imagePreview && (
-              <Button variant="destructive" size="sm" onClick={clearImage}>
-                <X className="mr-2 h-4 w-4" />
-                Hapus
-              </Button>
-            )}
-          </div>
-
-          {imagePreview ? (
-            <div className="relative aspect-video w-full rounded-md overflow-hidden border">
-              <img src={imagePreview || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
+        <div className="space-y-2 mb-4">
+          <Label>Metode Pembayaran</Label>
+          <RadioGroup
+            defaultValue={paymentMethod}
+            onValueChange={(value) => setPaymentMethod(value as "CASH" | "TRANSFER")}
+            className="flex flex-col space-y-1"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="TRANSFER" id="transfer" />
+              <Label htmlFor="transfer">Transfer Bank</Label>
             </div>
-          ) : (
-            <div
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Klik untuk unggah bukti pembayaran</p>
-              <p className="text-xs text-muted-foreground mt-1">Format: JPG, PNG (Maks. 5MB)</p>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="CASH" id="cash" />
+              <Label htmlFor="cash">Tunai</Label>
             </div>
-          )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg, image/png"
-            className="hidden"
-            onChange={handleImageChange}
-          />
+          </RadioGroup>
         </div>
+
+        {paymentMethod === "TRANSFER" ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Bukti Pembayaran</span>
+              {imagePreview && (
+                <Button variant="destructive" size="sm" onClick={clearImage}>
+                  <X className="mr-2 h-4 w-4" />
+                  Hapus
+                </Button>
+              )}
+            </div>
+
+            {imagePreview ? (
+              <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                <img src={imagePreview || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-blue-50 border-blue-200 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onClick={() => fileInputRef.current?.click()}
+                tabIndex={0}
+                role="button"
+                aria-label="Upload bukti pembayaran"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    fileInputRef.current?.click()
+                  }
+                }}
+              >
+                <ImageIcon className="h-8 w-8 text-blue-500 mb-2" />
+                <p className="text-sm font-medium text-blue-700">Klik untuk unggah bukti pembayaran</p>
+                <p className="text-xs text-blue-600 mt-1">Format: JPG, PNG (Maks. 5MB)</p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg, image/png"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </div>
+        ) : (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+            <p className="text-sm text-green-700">
+              Pembayaran tunai akan diproses tanpa bukti pembayaran. Admin akan memverifikasi pembayaran secara manual.
+            </p>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-end gap-4">
         <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
           Batal
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting || !imageFile}>
-          {isSubmitting ? (
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || (paymentMethod === "TRANSFER" && !imageFile)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {paymentMethod === "TRANSFER" ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Mengunggah...
+              <Upload className="mr-2 h-4 w-4" />
+              {isRejected ? "Unggah Bukti Baru" : "Unggah Bukti"}
             </>
           ) : (
             <>
-              <Upload className="mr-2 h-4 w-4" />
-              Unggah Bukti
+              <Check className="mr-2 h-4 w-4" />
+              {isRejected ? "Konfirmasi Ulang Pembayaran Tunai" : "Konfirmasi Pembayaran Tunai"}
             </>
           )}
         </Button>

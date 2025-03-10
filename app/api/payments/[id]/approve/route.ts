@@ -34,14 +34,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Pembayaran tidak ditemukan" }, { status: 404 })
     }
 
-    // Verifikasi bahwa pembayaran belum disetujui
-    if (payment.status !== "PENDING") {
-      return NextResponse.json({ error: "Pembayaran ini sudah diproses sebelumnya" }, { status: 400 })
-    }
-
-    // Verifikasi bahwa pembayaran memiliki bukti
-    if (!payment.proofImageUrl) {
-      return NextResponse.json({ error: "Pembayaran ini belum memiliki bukti pembayaran" }, { status: 400 })
+    // Verifikasi bahwa pembayaran menunggu persetujuan
+    if (payment.status !== "WAITING_FOR_APPROVAL") {
+      return NextResponse.json({ error: "Pembayaran ini tidak dalam status menunggu persetujuan" }, { status: 400 })
     }
 
     // Update pembayaran
@@ -79,11 +74,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     return NextResponse.json(updatedPayment)
   } catch (error) {
+    console.error("Error approving payment:", error)
+
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Validasi gagal", details: error.errors }, { status: 400 })
     }
 
-    console.error("Error approving payment:", error)
     return NextResponse.json({ error: "Terjadi kesalahan saat menyetujui pembayaran" }, { status: 500 })
   }
 }

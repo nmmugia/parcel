@@ -21,8 +21,9 @@ export function AdminHeader() {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
-    // Dispatch custom event to notify sidebar component
-    document.dispatchEvent(new CustomEvent("toggle-sidebar"))
+    // Use a more reliable way to communicate with the sidebar
+    const event = new CustomEvent("toggle-sidebar", { detail: { isOpen: !isSidebarOpen } })
+    window.dispatchEvent(event)
   }
 
   return (

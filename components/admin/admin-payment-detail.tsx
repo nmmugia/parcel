@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { ArrowLeft, CheckCircle, XCircle, ImageIcon } from "lucide-react"
+import { ArrowLeft, CheckCircle, XCircle, ImageIcon, CreditCard, Loader2 } from "lucide-react"
 
 interface TransactionWithRelations extends Transaction {
   package: Package
@@ -48,8 +48,10 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "PENDING":
-        return <Badge variant="outline">Menunggu</Badge>
+      case "WAITING_FOR_PAYMENT":
+        return <Badge variant="outline">Menunggu Pembayaran</Badge>
+      case "WAITING_FOR_APPROVAL":
+        return <Badge variant="outline">Menunggu Persetujuan</Badge>
       case "APPROVED":
         return <Badge variant="success">Disetujui</Badge>
       case "REJECTED":
@@ -64,8 +66,8 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
 
     try {
       // Hitung bonus
-      const resellerBonus = payment.amount * bonusRates.resellerBonusRate
-      const adminBonus = payment.amount * bonusRates.adminBonusRate
+      const resellerBonus = Math.round(payment.amount * bonusRates.resellerBonusRate)
+      const adminBonus = Math.round(payment.amount * bonusRates.adminBonusRate)
 
       const response = await fetch(`/api/payments/${payment.id}/approve`, {
         method: "POST",
@@ -167,7 +169,9 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Metode Pembayaran:</span>
-                  <span className="font-medium">{payment.paymentMethod}</span>
+                  <span className="font-medium">
+                    {payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}
+                  </span>
                 </div>
                 {payment.status === "APPROVED" && (
                   <>
@@ -218,18 +222,22 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Bonus Reseller (jika disetujui):</span>
-                    <span className="font-medium">{formatCurrency(payment.amount * bonusRates.resellerBonusRate)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(Math.round(payment.amount * bonusRates.resellerBonusRate))}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Bonus Admin (jika disetujui):</span>
-                    <span className="font-medium">{formatCurrency(payment.amount * bonusRates.adminBonusRate)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(Math.round(payment.amount * bonusRates.adminBonusRate))}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-4">
-            {payment.status === "PENDING" && payment.proofImageUrl && (
+            {payment.status === "WAITING_FOR_APPROVAL" && (
               <>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -248,7 +256,14 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                     <AlertDialogFooter>
                       <AlertDialogCancel>Batal</AlertDialogCancel>
                       <AlertDialogAction onClick={handleRejectPayment} disabled={isProcessing}>
-                        {isProcessing ? "Memproses..." : "Ya, Tolak"}
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          "Ya, Tolak"
+                        )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -271,7 +286,14 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                     <AlertDialogFooter>
                       <AlertDialogCancel>Batal</AlertDialogCancel>
                       <AlertDialogAction onClick={handleApprovePayment} disabled={isProcessing}>
-                        {isProcessing ? "Memproses..." : "Ya, Setujui"}
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          "Ya, Setujui"
+                        )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -293,23 +315,30 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
             <CardDescription>Bukti pembayaran yang diunggah oleh reseller</CardDescription>
           </CardHeader>
           <CardContent>
-            {payment.proofImageUrl ? (
-              <div className="relative aspect-video w-full rounded-md overflow-hidden border">
-                <Image
-                  src={payment.proofImageUrl || "/placeholder.svg"}
-                  alt="Bukti Pembayaran"
-                  fill
-                  className="object-contain"
-                />
-              </div>
+            {payment.paymentMethod === "TRANSFER" ? (
+              payment.proofImageUrl ? (
+                <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                  <Image
+                    src={payment.proofImageUrl || "/placeholder.svg"}
+                    alt="Bukti Pembayaran"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-md">
+                  <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Belum ada bukti pembayaran</p>
+                </div>
+              )
             ) : (
               <div className="flex flex-col items-center justify-center h-48 bg-muted rounded-md">
-                <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Belum ada bukti pembayaran</p>
+                <CreditCard className="h-12 w-12 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Pembayaran tunai tanpa bukti transfer</p>
               </div>
             )}
           </CardContent>
-          {payment.proofImageUrl && (
+          {payment.paymentMethod === "TRANSFER" && payment.proofImageUrl && (
             <CardFooter>
               <Button
                 variant="outline"

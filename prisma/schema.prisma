@@ -78,7 +78,7 @@ model Payment {
   proofImageUrl String?
   dueDate       DateTime
   paidDate      DateTime?
-  status        PaymentStatus @default(PENDING)
+  status        PaymentStatus @default(WAITING_FOR_PAYMENT)  // Changed from PENDING
   resellerBonus Float?
   adminBonus    Float?
   createdAt     DateTime      @default(now())
@@ -113,7 +113,8 @@ enum PaymentMethod {
 }
 
 enum PaymentStatus {
-  PENDING
+  WAITING_FOR_PAYMENT
+  WAITING_FOR_APPROVAL
   APPROVED
   REJECTED
 }

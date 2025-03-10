@@ -13,6 +13,13 @@ export default async function AdminPaymentsPage() {
   }
 
   const payments = await db.payment.findMany({
+    where: {
+      transaction: {
+        status: {
+          notIn: ["CANCELLED", "COMPLETED"],
+        },
+      },
+    },
     include: {
       transaction: {
         include: {
@@ -37,11 +44,25 @@ export default async function AdminPaymentsPage() {
     ],
   })
 
+  // Get bonus rates from settings
+  const bonusRates = await db.setting.findFirst({
+    where: {
+      key: "bonusRates",
+    },
+  })
+
+  const rates = bonusRates
+    ? JSON.parse(bonusRates.value)
+    : {
+        resellerBonusRate: 0.1, // Default 10%
+        adminBonusRate: 0.05, // Default 5%
+      }
+
   return (
     <AdminLayout>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">Manajemen Pembayaran</h1>
-        <AdminPaymentManagement payments={payments} />
+        <AdminPaymentManagement payments={payments} bonusRates={rates} />
       </div>
     </AdminLayout>
   )

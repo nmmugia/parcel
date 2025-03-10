@@ -9,6 +9,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { CreditCard, Check, X, Clock, Eye } from "lucide-react"
+// Import the filter component
+import { PaymentFilter } from "@/components/reseller/payment-filter"
+import { format } from "date-fns"
+import { id } from "date-fns/locale"
 
 interface PaymentWithRelations extends Payment {
   transaction: Transaction & {
@@ -23,20 +27,103 @@ interface PaymentHistoryProps {
 export function PaymentHistory({ payments }: PaymentHistoryProps) {
   const [activeTab, setActiveTab] = useState("all")
 
+  // Add filter state
+  const [filters, setFilters] = useState({
+    status: "all",
+    sortBy: "dueDate",
+    sortOrder: "asc" as "asc" | "desc",
+    groupBy: "none",
+  })
+
+  // Update the filteredPayments logic to use the filters
   const filteredPayments = useMemo(() => {
-    if (activeTab === "all") {
-      return payments
+    let filtered = payments
+
+    // Filter berdasarkan tab/status
+    if (activeTab !== "all") {
+      filtered = filtered.filter((payment) => payment.status === activeTab)
     }
-    return payments.filter((payment) => payment.status === activeTab)
-  }, [payments, activeTab])
+
+    // Sort payments
+    filtered = [...filtered].sort((a, b) => {
+      if (filters.sortBy === "dueDate") {
+        return filters.sortOrder === "asc"
+          ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+      } else if (filters.sortBy === "paidDate") {
+        // Handle null paidDate
+        if (!a.paidDate) return filters.sortOrder === "asc" ? 1 : -1
+        if (!b.paidDate) return filters.sortOrder === "asc" ? -1 : 1
+
+        return filters.sortOrder === "asc"
+          ? new Date(a.paidDate).getTime() - new Date(b.paidDate).getTime()
+          : new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime()
+      } else if (filters.sortBy === "amount") {
+        return filters.sortOrder === "asc" ? a.amount - b.amount : b.amount - a.amount
+      }
+      return 0
+    })
+
+    return filtered
+  }, [payments, activeTab, filters])
+
+  // Function to group payments
+  const groupedPayments = useMemo(() => {
+    if (filters.groupBy === "none") {
+      return { "Semua Pembayaran": filteredPayments }
+    }
+
+    const groups: Record<string, PaymentWithRelations[]> = {}
+
+    filteredPayments.forEach((payment) => {
+      let groupKey = ""
+
+      if (filters.groupBy === "month") {
+        const date = new Date(payment.dueDate)
+        groupKey = format(date, "MMMM yyyy", { locale: id })
+      } else if (filters.groupBy === "status") {
+        switch (payment.status) {
+          case "WAITING_FOR_PAYMENT":
+            groupKey = "Menunggu Pembayaran"
+            break
+          case "WAITING_FOR_APPROVAL":
+            groupKey = "Menunggu Persetujuan"
+            break
+          case "APPROVED":
+            groupKey = "Disetujui"
+            break
+          case "REJECTED":
+            groupKey = "Ditolak"
+            break
+          default:
+            groupKey = "Lainnya"
+        }
+      }
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = []
+      }
+
+      groups[groupKey].push(payment)
+    })
+
+    return groups
+  }, [filteredPayments, filters.groupBy])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "PENDING":
+      case "WAITING_FOR_PAYMENT":
         return (
           <Badge variant="outline" className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Menunggu
+            Menunggu Pembayaran
+          </Badge>
+        )
+      case "WAITING_FOR_APPROVAL":
+        return (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Menunggu Persetujuan
           </Badge>
         )
       case "APPROVED":
@@ -74,16 +161,20 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">Semua</TabsTrigger>
-          <TabsTrigger value="PENDING">Menunggu</TabsTrigger>
-          <TabsTrigger value="APPROVED">Disetujui</TabsTrigger>
-          <TabsTrigger value="REJECTED">Ditolak</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <PaymentFilter onFilterChange={setFilters} />
 
-      {filteredPayments.length === 0 ? (
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all">Semua</TabsTrigger>
+            <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
+            <TabsTrigger value="WAITING_FOR_APPROVAL">Menunggu Persetujuan</TabsTrigger>
+            <TabsTrigger value="APPROVED">Disetujui</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {Object.keys(groupedPayments).length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-6">
             <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
@@ -94,65 +185,81 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredPayments.map((payment) => (
-            <Card key={payment.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{payment.transaction.package.name}</CardTitle>
-                  {getStatusBadge(payment.status)}
-                </div>
-                <CardDescription>Pelanggan: {payment.transaction.customerName}</CardDescription>
-              </CardHeader>
-              <CardContent className="pb-3">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Jumlah:</span>
-                    <span className="font-medium">{formatCurrency(payment.amount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Jatuh Tempo:</span>
-                    <span className="font-medium">{formatDate(payment.dueDate)}</span>
-                  </div>
-                  {payment.paidDate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tanggal Bayar:</span>
-                      <span className="font-medium">{formatDate(payment.paidDate)}</span>
-                    </div>
-                  )}
-                  {payment.resellerBonus && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bonus Reseller:</span>
-                      <span className="font-medium">{formatCurrency(payment.resellerBonus)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bukti Pembayaran:</span>
-                    <span className="font-medium">
-                      {payment.proofImageUrl ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(payment.proofImageUrl!, "_blank")}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Lihat
+        <div className="space-y-8">
+          {Object.entries(groupedPayments).map(([groupName, payments]) => (
+            <div key={groupName} className="space-y-4">
+              {filters.groupBy !== "none" && <h3 className="text-lg font-semibold">{groupName}</h3>}
+
+              <div className="space-y-4">
+                {payments.map((payment) => (
+                  <Card key={payment.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{payment.transaction.package.name}</CardTitle>
+                        {getStatusBadge(payment.status)}
+                      </div>
+                      <CardDescription>Pelanggan: {payment.transaction.customerName}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-3">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Jumlah:</span>
+                          <span className="font-medium">{formatCurrency(payment.amount)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Jatuh Tempo:</span>
+                          <span className="font-medium">{formatDate(payment.dueDate)}</span>
+                        </div>
+                        {payment.paidDate && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tanggal Bayar:</span>
+                            <span className="font-medium">{formatDate(payment.paidDate)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Metode Pembayaran:</span>
+                          <span className="font-medium">
+                            {payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}
+                          </span>
+                        </div>
+                        {payment.resellerBonus && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Bonus Reseller:</span>
+                            <span className="font-medium">{formatCurrency(payment.resellerBonus)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Bukti Pembayaran:</span>
+                          <span className="font-medium">
+                            {payment.proofImageUrl ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(payment.proofImageUrl!, "_blank")}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Lihat
+                              </Button>
+                            ) : payment.paymentMethod === "CASH" ? (
+                              "Pembayaran Tunai"
+                            ) : (
+                              "Belum diunggah"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <div className="px-6 pb-6">
+                      <Link href={`/reseller/transactions/${payment.transaction.id}`}>
+                        <Button variant="outline" className="w-full">
+                          Lihat Transaksi
                         </Button>
-                      ) : (
-                        "Belum diunggah"
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-              <div className="px-6 pb-6">
-                <Link href={`/reseller/transactions/${payment.transactionId}`}>
-                  <Button variant="outline" className="w-full">
-                    Lihat Transaksi
-                  </Button>
-                </Link>
+                      </Link>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

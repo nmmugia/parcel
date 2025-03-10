@@ -15,6 +15,11 @@ export default async function ResellerPaymentsPage() {
   const payments = await db.payment.findMany({
     where: {
       resellerId: session.user.id,
+      transaction: {
+        status: {
+          notIn: ["CANCELLED", "COMPLETED"],
+        },
+      },
     },
     include: {
       transaction: {

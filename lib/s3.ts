@@ -20,6 +20,7 @@ export async function uploadToS3(file: Buffer, fileName: string): Promise<string
       Key: fileKey,
       Body: file,
       ContentType: getContentType(fileName),
+      ACL: "public-read",
     },
   })
 

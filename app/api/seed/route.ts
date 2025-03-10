@@ -90,6 +90,7 @@ export async function GET() {
 
     return NextResponse.json({ message: "Database berhasil diisi dengan data awal" })
   } catch (error) {
+    console.error("Error seeding database:", error)
     return NextResponse.json({ error: "Terjadi kesalahan saat mengisi database" }, { status: 500 })
   }
 }
