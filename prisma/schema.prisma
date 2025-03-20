@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
+} 
 
 model User {
   id        String   @id @default(cuid())
@@ -22,25 +22,25 @@ model User {
 }
 
 model PackageType {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  icon        String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  icon            String
+  isBonusEligible Boolean   @default(false) // New field to control bonus eligibility
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // Relasi
-  packages    Package[] @relation("PackageTypePackages")
+  packages        Package[] @relation("PackageTypePackages")
 }
 
 model Package {
   id            String      @id @default(cuid())
   name          String
   description   String?
-  price         Float
   imageUrl      String?
-  tenorMonths   Int
-  monthlyAmount Float
+  tenorWeeks    Int         // Changed from tenorMonths to tenorWeeks
+  weeklyAmount  Float       // Changed from monthlyAmount to weeklyAmount
   isActive      Boolean     @default(true)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -54,12 +54,12 @@ model Package {
 model Transaction {
   id              String    @id @default(cuid())
   customerName    String
-  customerPhone   String
+  customerPhone   String?
   customerAddress String?
-  totalAmount     Float
-  tenorMonths     Int
-  monthlyAmount   Float
+  tenorWeeks      Int       // Changed from tenorMonths to tenorWeeks
+  weeklyAmount    Float     // Changed from monthlyAmount to weeklyAmount
   status          TransactionStatus @default(ACTIVE)
+  isBonusEligible Boolean   @default(true) // New field for bonus eligibility
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -78,11 +78,13 @@ model Payment {
   proofImageUrl String?
   dueDate       DateTime
   paidDate      DateTime?
-  status        PaymentStatus @default(PENDING)
+  status        PaymentStatus @default(WAITING_FOR_PAYMENT)
+  isLate        Boolean       @default(false) // New field to track late payments
   resellerBonus Float?
   adminBonus    Float?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  approvedAt    DateTime?
 
   // Relasi
   transactionId String
@@ -113,7 +115,8 @@ enum PaymentMethod {
 }
 
 enum PaymentStatus {
-  PENDING
+  WAITING_FOR_PAYMENT
+  WAITING_FOR_APPROVAL
   APPROVED
   REJECTED
 }
