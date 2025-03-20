@@ -150,7 +150,7 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
         )
       case "APPROVED":
         return (
-          <Badge variant="success" className="flex items-center gap-1">
+          <Badge variant="default" className="flex items-center gap-1">
             <Check className="h-3 w-3" />
             Disetujui
           </Badge>
@@ -207,9 +207,17 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
           onValueChange={setActiveTab}
           className="w-full md:w-auto"
         >
+<<<<<<< HEAD
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="all">Semua</TabsTrigger>
             <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
+=======
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="all">Semua</TabsTrigger>
+            <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
+          </TabsList>
+          <TabsList className="grid w-full grid-cols-3">
+>>>>>>> feature/package-management
             <TabsTrigger value="WAITING_FOR_APPROVAL">
               Menunggu Persetujuan {waitingForApprovalCount > 0 && `(${waitingForApprovalCount})`}
             </TabsTrigger>
@@ -257,7 +265,11 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
                           <span className="font-medium">{formatCurrency(payment.amount)}</span>
                         </div>
                         <div className="flex justify-between">
+<<<<<<< HEAD
                           <span className="text-muted-foreground">Jatuh Tempo:</span>
+=======
+                          <span className="text-muted-foreground">Batas Pembayaran:</span>
+>>>>>>> feature/package-management
                           <span className="font-medium">{formatDate(payment.dueDate)}</span>
                         </div>
                         {payment.paidDate && (
@@ -272,6 +284,7 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
                             {payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}
                           </span>
                         </div>
+<<<<<<< HEAD
                         {payment.resellerBonus && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Bonus Reseller:</span>
@@ -284,6 +297,8 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
                             <span className="font-medium">{formatCurrency(payment.adminBonus)}</span>
                           </div>
                         )}
+=======
+>>>>>>> feature/package-management
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Bukti Pembayaran:</span>
                           <span className="font-medium">

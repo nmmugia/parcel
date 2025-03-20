@@ -29,7 +29,7 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
         )
       case "APPROVED":
         return (
-          <Badge variant="success" className="flex items-center gap-1">
+          <Badge variant="default" className="flex items-center gap-1">
             <Check className="h-3 w-3" />
             Disetujui
           </Badge>
@@ -46,6 +46,15 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
     }
   }
 
+  const getMessage = (status:string) => {
+    switch (status) {
+    case "WAITING_FOR_APPROVAL":
+      return "Pembayaran Menggunakan Cash"
+    default:
+      return "Belum ada bukti pembayaran"
+    }
+  }
+
   if (payments.length === 0) {
     return <p className="text-center text-muted-foreground">Tidak ada data pembayaran</p>
   }
@@ -55,7 +64,7 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
       {payments.map((payment) => (
         <div key={payment.id} className="flex flex-col gap-2 rounded-lg border p-4">
           <div className="flex items-center justify-between">
-            <div className="font-medium">Cicilan {formatDate(payment.dueDate)}</div>
+            <div className="font-medium">Batas Tanggal Pembayaran {formatDate(payment.dueDate)}</div>
             {getStatusBadge(payment.status)}
           </div>
           <div className="flex justify-between text-sm">
@@ -68,18 +77,6 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
               <span>{formatDate(payment.paidDate)}</span>
             </div>
           )}
-          {payment.resellerBonus && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Bonus Reseller:</span>
-              <span>{formatCurrency(payment.resellerBonus)}</span>
-            </div>
-          )}
-          {payment.adminBonus && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Bonus Admin:</span>
-              <span>{formatCurrency(payment.adminBonus)}</span>
-            </div>
-          )}
           <div className="mt-2">
             {payment.proofImageUrl ? (
               <div className="flex items-center justify-between">
@@ -90,10 +87,14 @@ export function AdminPaymentList({ payments }: AdminPaymentListProps) {
                 </Button>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground">Belum ada bukti pembayaran</span>
+              <span className="text-sm text-muted-foreground">{getMessage(payment.status)}</span>
             )}
           </div>
+<<<<<<< HEAD
           {payment.status === "WAITING_FOR_APPROVAL" && payment.proofImageUrl && (
+=======
+          {payment.status === "WAITING_FOR_APPROVAL" && (
+>>>>>>> feature/package-management
             <div className="mt-2">
               <Link href={`/admin/payments/${payment.id}`}>
                 <Button size="sm" className="w-full">

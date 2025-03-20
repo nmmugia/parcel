@@ -1,6 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+<<<<<<< HEAD
+=======
+import Image from "next/image"
+>>>>>>> feature/package-management
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -78,10 +82,23 @@ export function AdminSidebar({ className }: SidebarProps) {
           className,
         )}
       >
+<<<<<<< HEAD
         <div className="flex h-14 items-center px-4 border-b">
           <Link href="/admin/dashboard" className="flex items-center font-semibold text-lg">
             <Package className="mr-2 h-5 w-5" />
             <span>Admin Panel</span>
+=======
+        <div className="flex h-30 items-center px-4 border-b">
+          <Link href="/admin/dashboard" className="flex items-center font-semibold text-lg">
+            <Image
+                src={"/logo.png"}
+                alt="Kekey Parcel"
+                width="50"
+                height="50"
+                className="mr-2"
+              />
+            <span>Kekey Parcel</span>
+>>>>>>> feature/package-management
           </Link>
 
           {/* Close button on mobile */}
@@ -164,6 +181,7 @@ export function AdminSidebar({ className }: SidebarProps) {
                 <BarChart className="h-4 w-4" />
                 <span>Laporan</span>
               </Link>
+<<<<<<< HEAD
               <Link
                 href="/admin/settings"
                 className={cn(
@@ -174,6 +192,8 @@ export function AdminSidebar({ className }: SidebarProps) {
                 <Settings className="h-4 w-4" />
                 <span>Pengaturan</span>
               </Link>
+=======
+>>>>>>> feature/package-management
             </nav>
           </div>
           <div className="absolute bottom-4 left-0 right-0 px-3">

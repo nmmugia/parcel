@@ -8,9 +8,32 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
+<<<<<<< HEAD
 import { Loader2, Upload, X, ImageIcon, Check } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+=======
+import { Loader2, Copy, Upload, X, ImageIcon, Check } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+
+
+type BankAccount = {
+  bank: string
+  accountNumber: string
+  accountName: string
+}
+
+const bankAccounts: BankAccount[] = [
+  { bank: "BCA", accountNumber: "4530052457", accountName: "Nita Novianti" },
+  { bank: "BNI", accountNumber: "0819440953", accountName: "Nita Novianti" },
+  { bank: "BRI", accountNumber: "107701005903506", accountName: "Nita Novianti" },
+  { bank: "Mandiri", accountNumber: "9000032646763", accountName: "Nita Novianti" },
+]
+
+>>>>>>> feature/package-management
 
 interface PaymentUploadFormProps {
   payment: Payment
@@ -27,6 +50,11 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
   const { toast } = useToast()
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("TRANSFER")
   const [mounted, setMounted] = useState(false)
+<<<<<<< HEAD
+=======
+  const [copiedBank, setCopiedBank] = useState<string | null>(null)
+
+>>>>>>> feature/package-management
 
   // Fix hydration issues by only rendering client-side content after mount
   useEffect(() => {
@@ -147,6 +175,15 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
     }
   }
 
+<<<<<<< HEAD
+=======
+  const copyToClipboard = (accountNumber: string, bank: string) => {
+    navigator.clipboard.writeText(accountNumber)
+    setCopiedBank(bank)
+    setTimeout(() => setCopiedBank(null), 2000)
+  }
+
+>>>>>>> feature/package-management
   // Don't render anything until client-side hydration is complete
   if (!mounted) {
     return null
@@ -161,7 +198,11 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
         <CardDescription>
           {isRejected
             ? "Pembayaran sebelumnya ditolak. Silakan unggah bukti pembayaran baru."
+<<<<<<< HEAD
             : `Unggah bukti pembayaran untuk cicilan ${formatDate(payment.dueDate)}`}
+=======
+            : `Unggah bukti pembayaran ${formatDate(payment.dueDate)}`}
+>>>>>>> feature/package-management
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -171,7 +212,7 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
             <span className="font-medium">{formatCurrency(payment.amount)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Jatuh Tempo:</span>
+            <span className="text-muted-foreground">Batas Pembayaran:</span>
             <span className="font-medium">{formatDate(payment.dueDate)}</span>
           </div>
         </div>
@@ -205,6 +246,58 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
                 </Button>
               )}
             </div>
+<<<<<<< HEAD
+=======
+            <div className="space-y-2">
+                <Label>Transfer to one of these accounts:</Label>
+                <Tabs defaultValue="BCA" className="w-full">
+                  <TabsList className="w-full flex flex-wrap h-auto min-h-10">
+                    {bankAccounts.map((account) => (
+                      <TabsTrigger key={account.bank} value={account.bank} className="whitespace-normal break-words">
+                        Bank {account.bank}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  {bankAccounts.map((account) => (
+                    <TabsContent key={account.bank} value={account.bank} className="mt-4">
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-sm">Bank</Label>
+                              <p className="font-medium">{account.bank}</p>
+                            </div>
+                            <div>
+                              <Label className="text-sm">Nomor Rekening</Label>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium">{account.accountNumber}</p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyToClipboard(account.accountNumber, account.bank)}
+                                >
+                                  {copiedBank === account.bank ? (
+                                    <Check className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-sm">Atas Nama</Label>
+                              <p className="font-medium">{account.accountName}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
+>>>>>>> feature/package-management
 
             {imagePreview ? (
               <div className="relative aspect-video w-full rounded-md overflow-hidden border">

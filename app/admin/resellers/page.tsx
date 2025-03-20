@@ -15,14 +15,39 @@ export default async function ResellersPage() {
     redirect("/")
   }
 
-  const resellers = await db.user.findMany({
+  // Fetch resellers with transaction counts
+  const resellersWithCounts = await db.user.findMany({
     where: {
       role: "RESELLER",
     },
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      _count: {
+        select: {
+          transactions: true,
+        },
+      },
+    },
   })
+
+  // Get unique customer counts for each reseller
+  const resellersWithCustomerCounts = await Promise.all(
+    resellersWithCounts.map(async (reseller) => {
+      const uniqueCustomers = await db.transaction.groupBy({
+        by: ["customerName"],
+        where: {
+          resellerId: reseller.id,
+        },
+      })
+
+      return {
+        ...reseller,
+        uniqueCustomerCount: uniqueCustomers.length,
+      }
+    }),
+  )
 
   return (
     <AdminLayout>
@@ -37,7 +62,7 @@ export default async function ResellersPage() {
           </Link>
         </div>
 
-        <ResellerList resellers={resellers} />
+        <ResellerList resellers={resellersWithCustomerCounts} />
       </div>
     </AdminLayout>
   )

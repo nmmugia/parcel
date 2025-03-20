@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import type { Payment, Transaction, Package, User } from "@prisma/client"
+import type { Payment, Transaction, Package, User, PackageType } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,9 +23,17 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { ArrowLeft, CheckCircle, XCircle, ImageIcon, CreditCard, Loader2 } from "lucide-react"
+<<<<<<< HEAD
+=======
+
+interface PackageWithRelations extends Package {
+  package: Package
+  packageType: Pick<PackageType, "isBonusEligible">
+}
+>>>>>>> feature/package-management
 
 interface TransactionWithRelations extends Transaction {
-  package: Package
+  package: PackageWithRelations
   reseller: Pick<User, "id" | "name" | "email">
 }
 
@@ -53,7 +61,7 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
       case "WAITING_FOR_APPROVAL":
         return <Badge variant="outline">Menunggu Persetujuan</Badge>
       case "APPROVED":
-        return <Badge variant="success">Disetujui</Badge>
+        return <Badge variant="default">Disetujui</Badge>
       case "REJECTED":
         return <Badge variant="destructive">Ditolak</Badge>
       default:
@@ -158,7 +166,7 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                   <span className="font-medium">{formatCurrency(payment.amount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Jatuh Tempo:</span>
+                  <span className="text-muted-foreground">Batas Pembayaran:</span>
                   <span className="font-medium">{formatDate(payment.dueDate)}</span>
                 </div>
                 {payment.paidDate && (
@@ -173,18 +181,6 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                     {payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}
                   </span>
                 </div>
-                {payment.status === "APPROVED" && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bonus Reseller:</span>
-                      <span className="font-medium">{formatCurrency(payment.resellerBonus || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bonus Admin:</span>
-                      <span className="font-medium">{formatCurrency(payment.adminBonus || 0)}</span>
-                    </div>
-                  </>
-                )}
               </div>
 
               <Separator />
@@ -208,11 +204,11 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
               </div>
 
               <Separator />
-
-              <div>
+              {payment.transaction.package.packageType.isBonusEligible && <div>
                 <h3 className="font-medium mb-2">Perhitungan Bonus</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
+<<<<<<< HEAD
                     <span className="text-muted-foreground">Persentase Bonus Reseller:</span>
                     <span className="font-medium">{(bonusRates.resellerBonusRate * 100).toFixed(0)}%</span>
                   </div>
@@ -230,10 +226,19 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                     <span className="text-muted-foreground">Bonus Admin (jika disetujui):</span>
                     <span className="font-medium">
                       {formatCurrency(Math.round(payment.amount * bonusRates.adminBonusRate))}
+=======
+                    <span className="text-muted-foreground">Berhak Atas Bonus:</span>
+                    <span className="font-medium">
+                      {payment.transaction.isBonusEligible ? (
+                        <Badge variant="default">Ya</Badge>
+                      ) : (
+                        <Badge variant="destructive">Tidak</Badge>
+                      )}
+>>>>>>> feature/package-management
                     </span>
                   </div>
                 </div>
-              </div>
+              </div>}
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-4">

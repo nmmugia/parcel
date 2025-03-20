@@ -83,7 +83,11 @@ export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
             <RadioGroup defaultValue={sortBy} onValueChange={handleSortByChange} className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="dueDate" id="dueDate" />
+<<<<<<< HEAD
                 <Label htmlFor="dueDate">Tanggal Jatuh Tempo</Label>
+=======
+                <Label htmlFor="dueDate">Tanggal Batas Pembayaran</Label>
+>>>>>>> feature/package-management
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="paidDate" id="paidDate" />
