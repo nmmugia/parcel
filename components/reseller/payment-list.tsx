@@ -1,19 +1,11 @@
 "use client"
 
-<<<<<<< HEAD
-import { useState, useEffect } from "react"
-=======
 import { useState, useRef, useEffect } from "react"
->>>>>>> feature/package-management
 import type { Payment } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/lib/utils"
-<<<<<<< HEAD
-import { Upload, Check, X, Clock, AlertTriangle } from "lucide-react"
-=======
 import { Upload, Check, X, Clock, AlertTriangle, ChevronDown } from "lucide-react"
->>>>>>> feature/package-management
 import { PaymentUploadForm } from "@/components/reseller/payment-upload-form"
 
 interface PaymentListProps {
@@ -24,13 +16,6 @@ interface PaymentListProps {
 export function PaymentList({ payments, transactionId }: PaymentListProps) {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
   const [mounted, setMounted] = useState(false)
-<<<<<<< HEAD
-
-  // Fix hydration issues by only rendering client-side content after mount
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-=======
   const [showScrollButton, setShowScrollButton] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   // Fix hydration issues by only rendering client-side content after mount
@@ -63,7 +48,6 @@ export function PaymentList({ payments, transactionId }: PaymentListProps) {
   const scrollToB = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }
->>>>>>> feature/package-management
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -153,10 +137,6 @@ export function PaymentList({ payments, transactionId }: PaymentListProps) {
                 </span>
               </div>
             )}
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Metode Pembayaran:</span>
-              <span>{payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}</span>
-            </div>
             <div className="mt-2">
               {payment.status === "REJECTED" && (
                 <div className="flex items-center gap-2 text-sm text-destructive mb-2">
@@ -181,11 +161,7 @@ export function PaymentList({ payments, transactionId }: PaymentListProps) {
                   )}
                 </div>
               ) : canUploadPayment(payment) ? (
-<<<<<<< HEAD
-                <Button variant="outline" size="sm" className="w-full" onClick={() => setSelectedPayment(payment)}>
-=======
                 <Button variant="outline" size="sm" className="w-full" onClick={() => scrollToBottom(payment)}>
->>>>>>> feature/package-management
                   <Upload className="mr-2 h-4 w-4" />
                   {payment.status === "REJECTED" ? "Unggah Bukti Baru" : "Konfirmasi Pembayaran"}
                 </Button>

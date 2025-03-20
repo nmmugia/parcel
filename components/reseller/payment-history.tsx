@@ -165,17 +165,11 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
         <PaymentFilter onFilterChange={setFilters} />
 
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-<<<<<<< HEAD
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
-=======
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">Semua</TabsTrigger>
             <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
           </TabsList>
           <TabsList className="grid w-full grid-cols-2">
->>>>>>> feature/package-management
             <TabsTrigger value="WAITING_FOR_APPROVAL">Menunggu Persetujuan</TabsTrigger>
             <TabsTrigger value="APPROVED">Disetujui</TabsTrigger>
           </TabsList>
@@ -215,11 +209,7 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
                           <span className="font-medium">{formatCurrency(payment.amount)}</span>
                         </div>
                         <div className="flex justify-between">
-<<<<<<< HEAD
-                          <span className="text-muted-foreground">Jatuh Tempo:</span>
-=======
                           <span className="text-muted-foreground">Batas Pembayaran:</span>
->>>>>>> feature/package-management
                           <span className="font-medium">{formatDate(payment.dueDate)}</span>
                         </div>
                         {payment.paidDate && (

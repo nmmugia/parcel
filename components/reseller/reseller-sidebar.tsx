@@ -1,10 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-<<<<<<< HEAD
-=======
 import Image from "next/image"
->>>>>>> feature/package-management
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -82,12 +79,6 @@ export function ResellerSidebar({ className }: SidebarProps) {
           className,
         )}
       >
-<<<<<<< HEAD
-        <div className="flex h-14 items-center px-4 border-b">
-          <Link href="/reseller/dashboard" className="flex items-center font-semibold text-lg">
-            <Package className="mr-2 h-5 w-5" />
-            <span>Paket Reseller</span>
-=======
         
         <div className="flex h-30 items-center px-4 border-b">
           <Link href="/admin/dashboard" className="flex items-center font-semibold text-lg">
@@ -99,7 +90,6 @@ export function ResellerSidebar({ className }: SidebarProps) {
                 className="mr-2"
               />
             <span>Kekey Parcel</span>
->>>>>>> feature/package-management
           </Link>
 
           {/* Close button on mobile */}

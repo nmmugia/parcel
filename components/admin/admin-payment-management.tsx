@@ -22,10 +22,20 @@ interface TransactionWithRelations extends Transaction {
 
 interface PaymentWithRelations extends Payment {
   transaction: TransactionWithRelations
+  batchId?: string | null // Make batchId optional since it might not exist yet
 }
 
 interface AdminPaymentManagementProps {
   payments: PaymentWithRelations[]
+}
+
+interface BatchGroup {
+  batchId: string
+  payments: PaymentWithRelations[]
+  totalAmount: number
+  proofImageUrl: string | null
+  status: string
+  transaction: TransactionWithRelations
 }
 
 export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps) {
@@ -88,48 +98,50 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
   }, [payments, activeTab, searchQuery, filters])
 
   // Function to group payments
-  const groupedPayments = useMemo(() => {
+  const [groupedPayments, setGroupedPayments] = useState<Record<string, PaymentWithRelations[]>>({})
+
+  useMemo(() => {
+    const newGroupedPayments: Record<string, PaymentWithRelations[]> = {}
+
     if (filters.groupBy === "none") {
-      return { "Semua Pembayaran": filteredPayments }
+      newGroupedPayments["Semua Pembayaran"] = filteredPayments
+    } else {
+      filteredPayments.forEach((payment) => {
+        let groupKey = ""
+
+        if (filters.groupBy === "reseller") {
+          groupKey = payment.transaction.reseller.name
+        } else if (filters.groupBy === "month") {
+          const date = new Date(payment.dueDate)
+          groupKey = format(date, "MMMM yyyy", { locale: id })
+        } else if (filters.groupBy === "status") {
+          switch (payment.status) {
+            case "WAITING_FOR_PAYMENT":
+              groupKey = "Menunggu Pembayaran"
+              break
+            case "WAITING_FOR_APPROVAL":
+              groupKey = "Menunggu Persetujuan"
+              break
+            case "APPROVED":
+              groupKey = "Disetujui"
+              break
+            case "REJECTED":
+              groupKey = "Ditolak"
+              break
+            default:
+              groupKey = "Lainnya"
+          }
+        }
+
+        if (!newGroupedPayments[groupKey]) {
+          newGroupedPayments[groupKey] = []
+        }
+
+        newGroupedPayments[groupKey].push(payment)
+      })
     }
 
-    const groups: Record<string, PaymentWithRelations[]> = {}
-
-    filteredPayments.forEach((payment) => {
-      let groupKey = ""
-
-      if (filters.groupBy === "reseller") {
-        groupKey = payment.transaction.reseller.name
-      } else if (filters.groupBy === "month") {
-        const date = new Date(payment.dueDate)
-        groupKey = format(date, "MMMM yyyy", { locale: id })
-      } else if (filters.groupBy === "status") {
-        switch (payment.status) {
-          case "WAITING_FOR_PAYMENT":
-            groupKey = "Menunggu Pembayaran"
-            break
-          case "WAITING_FOR_APPROVAL":
-            groupKey = "Menunggu Persetujuan"
-            break
-          case "APPROVED":
-            groupKey = "Disetujui"
-            break
-          case "REJECTED":
-            groupKey = "Ditolak"
-            break
-          default:
-            groupKey = "Lainnya"
-        }
-      }
-
-      if (!groups[groupKey]) {
-        groups[groupKey] = []
-      }
-
-      groups[groupKey].push(payment)
-    })
-
-    return groups
+    setGroupedPayments(newGroupedPayments)
   }, [filteredPayments, filters.groupBy])
 
   const getStatusBadge = (status: string) => {
@@ -150,7 +162,7 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
         )
       case "APPROVED":
         return (
-          <Badge variant="default" className="flex items-center gap-1">
+          <Badge variant="success" className="flex items-center gap-1">
             <Check className="h-3 w-3" />
             Disetujui
           </Badge>
@@ -207,17 +219,11 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
           onValueChange={setActiveTab}
           className="w-full md:w-auto"
         >
-<<<<<<< HEAD
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
-=======
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">Semua</TabsTrigger>
             <TabsTrigger value="WAITING_FOR_PAYMENT">Menunggu Pembayaran</TabsTrigger>
           </TabsList>
           <TabsList className="grid w-full grid-cols-3">
->>>>>>> feature/package-management
             <TabsTrigger value="WAITING_FOR_APPROVAL">
               Menunggu Persetujuan {waitingForApprovalCount > 0 && `(${waitingForApprovalCount})`}
             </TabsTrigger>
@@ -265,11 +271,7 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
                           <span className="font-medium">{formatCurrency(payment.amount)}</span>
                         </div>
                         <div className="flex justify-between">
-<<<<<<< HEAD
                           <span className="text-muted-foreground">Jatuh Tempo:</span>
-=======
-                          <span className="text-muted-foreground">Batas Pembayaran:</span>
->>>>>>> feature/package-management
                           <span className="font-medium">{formatDate(payment.dueDate)}</span>
                         </div>
                         {payment.paidDate && (
@@ -284,21 +286,6 @@ export function AdminPaymentManagement({ payments }: AdminPaymentManagementProps
                             {payment.paymentMethod === "TRANSFER" ? "Transfer Bank" : "Tunai"}
                           </span>
                         </div>
-<<<<<<< HEAD
-                        {payment.resellerBonus && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Bonus Reseller:</span>
-                            <span className="font-medium">{formatCurrency(payment.resellerBonus)}</span>
-                          </div>
-                        )}
-                        {payment.adminBonus && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Bonus Admin:</span>
-                            <span className="font-medium">{formatCurrency(payment.adminBonus)}</span>
-                          </div>
-                        )}
-=======
->>>>>>> feature/package-management
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Bukti Pembayaran:</span>
                           <span className="font-medium">
