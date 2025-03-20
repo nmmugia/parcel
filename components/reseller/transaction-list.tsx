@@ -65,23 +65,6 @@ export function TransactionList({ transactions, totalCount, currentPage, pageSiz
     }
   }
 
-  if (transactions.length === 0 && totalCount === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center p-6">
-          <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-center">Belum ada transaksi</p>
-          <p className="text-sm text-muted-foreground text-center mt-1 mb-4">
-            Mulai buat transaksi dengan memilih paket
-          </p>
-          <Link href="/reseller/packages">
-            <Button>Lihat Katalog Paket</Button>
-          </Link>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -120,6 +103,10 @@ export function TransactionList({ transactions, totalCount, currentPage, pageSiz
                 ? "Tidak ada transaksi yang sesuai dengan pencarian Anda"
                 : "Tidak ada transaksi dengan status yang dipilih"}
             </p>
+            
+            <Link href="/reseller/packages" className="mt-5">
+              <Button>Lihat Katalog Paket</Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
