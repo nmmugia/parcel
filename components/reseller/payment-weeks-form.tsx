@@ -187,6 +187,8 @@ export function PaymentWeeksForm({
           {/* Weeks selector */}
           <div className="space-y-2">
             <Label>Jumlah Minggu</Label>
+          </div>
+          <div className="space-y-2">
             <div className="flex items-center space-x-4">
               <Button
                 type="button"

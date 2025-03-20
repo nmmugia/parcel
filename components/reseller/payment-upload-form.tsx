@@ -8,11 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
-<<<<<<< HEAD
-import { Loader2, Upload, X, ImageIcon, Check } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-=======
 import { Loader2, Copy, Upload, X, ImageIcon, Check } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -33,7 +28,6 @@ const bankAccounts: BankAccount[] = [
   { bank: "Mandiri", accountNumber: "9000032646763", accountName: "Nita Novianti" },
 ]
 
->>>>>>> feature/package-management
 
 interface PaymentUploadFormProps {
   payment: Payment
@@ -50,11 +44,8 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
   const { toast } = useToast()
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("TRANSFER")
   const [mounted, setMounted] = useState(false)
-<<<<<<< HEAD
-=======
   const [copiedBank, setCopiedBank] = useState<string | null>(null)
 
->>>>>>> feature/package-management
 
   // Fix hydration issues by only rendering client-side content after mount
   useEffect(() => {
@@ -175,15 +166,12 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
     }
   }
 
-<<<<<<< HEAD
-=======
   const copyToClipboard = (accountNumber: string, bank: string) => {
     navigator.clipboard.writeText(accountNumber)
     setCopiedBank(bank)
     setTimeout(() => setCopiedBank(null), 2000)
   }
 
->>>>>>> feature/package-management
   // Don't render anything until client-side hydration is complete
   if (!mounted) {
     return null
@@ -198,11 +186,7 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
         <CardDescription>
           {isRejected
             ? "Pembayaran sebelumnya ditolak. Silakan unggah bukti pembayaran baru."
-<<<<<<< HEAD
-            : `Unggah bukti pembayaran untuk cicilan ${formatDate(payment.dueDate)}`}
-=======
             : `Unggah bukti pembayaran ${formatDate(payment.dueDate)}`}
->>>>>>> feature/package-management
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -246,8 +230,6 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
                 </Button>
               )}
             </div>
-<<<<<<< HEAD
-=======
             <div className="space-y-2">
                 <Label>Transfer to one of these accounts:</Label>
                 <Tabs defaultValue="BCA" className="w-full">
@@ -297,7 +279,6 @@ export function PaymentUploadForm({ payment, transactionId, onClose, onSuccess }
                   ))}
                 </Tabs>
               </div>
->>>>>>> feature/package-management
 
             {imagePreview ? (
               <div className="relative aspect-video w-full rounded-md overflow-hidden border">

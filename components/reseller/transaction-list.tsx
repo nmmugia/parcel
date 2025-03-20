@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { IconDisplay } from "@/components/icon-display"
 import { ShoppingCart, Eye } from "lucide-react"
+import { Pagination } from "@/components/ui/pagination"
+import { usePathname } from "next/navigation"
+import { SearchInput } from "@/components/ui/search-input"
 
 interface TransactionWithRelations extends Transaction {
   package: Package & {
@@ -20,11 +23,15 @@ interface TransactionWithRelations extends Transaction {
 
 interface TransactionListProps {
   transactions: TransactionWithRelations[]
+  totalCount: number
+  currentPage: number
+  pageSize: number
+  searchQuery?: string
 }
 
-export function TransactionList({ transactions }: TransactionListProps) {
+export function TransactionList({ transactions, totalCount, currentPage, pageSize,searchQuery = "" }: TransactionListProps) {
   const [activeTab, setActiveTab] = useState("all")
-
+  const pathname = usePathname()
   const filteredTransactions = useMemo(() => {
     if (activeTab === "all") {
       return transactions
@@ -58,7 +65,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
     }
   }
 
-  if (transactions.length === 0) {
+  if (transactions.length === 0 && totalCount === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center p-6">
@@ -83,7 +90,25 @@ export function TransactionList({ transactions }: TransactionListProps) {
           <TabsTrigger value="ACTIVE">Aktif</TabsTrigger>
           <TabsTrigger value="COMPLETED">Selesai</TabsTrigger>
         </TabsList>
+        
+        <div className="ml-4">
+          <SearchInput placeholder="Cari nama pelanggan, paket..." className="w-full md:w-94" />
+          <Badge variant="outline" className="text-sm">
+            Total: {totalCount} transaksi
+          </Badge>
+        </div>
       </Tabs>
+
+      {searchQuery && (
+        <div className="text-sm text-muted-foreground">
+          Hasil pencarian untuk: <span className="font-medium">{searchQuery}</span>
+          {totalCount === 0 ? (
+            <span className="ml-1">- Tidak ada hasil</span>
+          ) : (
+            <span className="ml-1">- {totalCount} hasil</span>
+          )}
+        </div>
+      )}  
 
       {filteredTransactions.length === 0 ? (
         <Card>
@@ -91,61 +116,66 @@ export function TransactionList({ transactions }: TransactionListProps) {
             <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium text-center">Tidak ada transaksi</p>
             <p className="text-sm text-muted-foreground text-center mt-1">
-              Tidak ada transaksi dengan status yang dipilih
+              {searchQuery
+                ? "Tidak ada transaksi yang sesuai dengan pencarian Anda"
+                : "Tidak ada transaksi dengan status yang dipilih"}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {filteredTransactions.map((transaction) => {
-            const paymentStatus = getPaymentStatus(transaction.payments)
+        <>
+          <div className="grid gap-6 md:grid-cols-2">
+            {filteredTransactions.map((transaction) => {
+              const paymentStatus = getPaymentStatus(transaction.payments)
 
-            return (
-              <Card key={transaction.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <IconDisplay icon={transaction.package.packageType.icon} className="h-5 w-5" />
-                      <CardTitle className="text-lg">{transaction.package.name}</CardTitle>
+              return (
+                <Card key={transaction.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <IconDisplay icon={transaction.package.packageType.icon} className="h-5 w-5" />
+                        <CardTitle className="text-lg">{transaction.package.name}</CardTitle>
+                      </div>
+                      {getStatusBadge(transaction.status)}
                     </div>
-                    {getStatusBadge(transaction.status)}
-                  </div>
-                  <CardDescription className="mt-2">Pelanggan: {transaction.customerName}</CardDescription>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tanggal Transaksi:</span>
-                      <span className="font-medium">{formatDate(transaction.createdAt)}</span>
+                    <CardDescription className="mt-2">Pelanggan: {transaction.customerName}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tanggal Transaksi:</span>
+                        <span className="font-medium">{formatDate(transaction.createdAt)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Pembayaran per Minggu:</span>
+                        <span className="font-medium">{formatCurrency(transaction.weeklyAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Jumlah Minggu:</span>
+                        <span className="font-medium">{transaction.tenorWeeks} Minggu</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status Pembayaran:</span>
+                        <span className="font-medium">
+                          {paymentStatus.approvedCount}/{paymentStatus.totalCount} minggu
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pembayaran per Minggu:</span>
-                      <span className="font-medium">{formatCurrency(transaction.weeklyAmount)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Jumlah Minggu:</span>
-                      <span className="font-medium">{transaction.tenorWeeks} Minggu</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status Pembayaran:</span>
-                      <span className="font-medium">
-                        {paymentStatus.approvedCount}/{paymentStatus.totalCount} minggu
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-3">
-                  <Link href={`/reseller/transactions/${transaction.id}`} className="w-full">
-                    <Button variant="outline" className="w-full">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Lihat Detail
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            )
-          })}
-        </div>
+                  </CardContent>
+                  <CardFooter className="pt-3">
+                    <Link href={`/reseller/transactions/${transaction.id}`} className="w-full">
+                      <Button variant="outline" className="w-full">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Lihat Detail
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              )
+            })}
+          </div>
+          <Pagination totalItems={totalCount} currentPage={currentPage} pageSize={pageSize} baseUrl={pathname} />
+        </>
       )}
     </div>
   )

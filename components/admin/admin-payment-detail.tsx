@@ -23,14 +23,11 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { ArrowLeft, CheckCircle, XCircle, ImageIcon, CreditCard, Loader2 } from "lucide-react"
-<<<<<<< HEAD
-=======
 
 interface PackageWithRelations extends Package {
   package: Package
   packageType: Pick<PackageType, "isBonusEligible">
 }
->>>>>>> feature/package-management
 
 interface TransactionWithRelations extends Transaction {
   package: PackageWithRelations
@@ -208,25 +205,6 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                 <h3 className="font-medium mb-2">Perhitungan Bonus</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-<<<<<<< HEAD
-                    <span className="text-muted-foreground">Persentase Bonus Reseller:</span>
-                    <span className="font-medium">{(bonusRates.resellerBonusRate * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Persentase Bonus Admin:</span>
-                    <span className="font-medium">{(bonusRates.adminBonusRate * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bonus Reseller (jika disetujui):</span>
-                    <span className="font-medium">
-                      {formatCurrency(Math.round(payment.amount * bonusRates.resellerBonusRate))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bonus Admin (jika disetujui):</span>
-                    <span className="font-medium">
-                      {formatCurrency(Math.round(payment.amount * bonusRates.adminBonusRate))}
-=======
                     <span className="text-muted-foreground">Berhak Atas Bonus:</span>
                     <span className="font-medium">
                       {payment.transaction.isBonusEligible ? (
@@ -234,7 +212,6 @@ export function AdminPaymentDetail({ payment, bonusRates }: AdminPaymentDetailPr
                       ) : (
                         <Badge variant="destructive">Tidak</Badge>
                       )}
->>>>>>> feature/package-management
                     </span>
                   </div>
                 </div>

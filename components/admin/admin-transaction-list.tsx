@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { IconDisplay } from "@/components/icon-display"
 import { ShoppingCart, Eye, Search } from "lucide-react"
+import { Pagination } from "@/components/ui/pagination"
+import { usePathname } from "next/navigation"
 
 interface TransactionWithRelations extends Transaction {
   package: Package & {
@@ -22,11 +24,15 @@ interface TransactionWithRelations extends Transaction {
 
 interface AdminTransactionListProps {
   transactions: TransactionWithRelations[]
+  totalCount: number
+  currentPage: number
+  pageSize: number
 }
 
-export function AdminTransactionList({ transactions }: AdminTransactionListProps) {
+export function AdminTransactionList({ transactions, totalCount, currentPage, pageSize }: AdminTransactionListProps) {
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const pathname = usePathname()
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
@@ -105,13 +111,20 @@ export function AdminTransactionList({ transactions }: AdminTransactionListProps
           />
         </div>
 
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="ACTIVE">Aktif</TabsTrigger>
-            <TabsTrigger value="COMPLETED">Selesai</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-4">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">Semua</TabsTrigger>
+              <TabsTrigger value="ACTIVE">Aktif</TabsTrigger>
+              <TabsTrigger value="COMPLETED">Selesai</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-sm md:inline-flex">
+            Total: {totalCount} transaksi
+          </Badge>
+        </div>
       </div>
 
       {filteredTransactions.length === 0 ? (
@@ -125,56 +138,60 @@ export function AdminTransactionList({ transactions }: AdminTransactionListProps
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTransactions.map((transaction) => {
-            const paymentStatus = getPaymentStatus(transaction.payments)
+        
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredTransactions.map((transaction) => {
+              const paymentStatus = getPaymentStatus(transaction.payments)
 
-            return (
-              <Card key={transaction.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <IconDisplay icon={transaction.package.packageType.icon} className="h-5 w-5" />
-                      <CardTitle className="text-lg">{transaction.package.name}</CardTitle>
+              return (
+                <Card key={transaction.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <IconDisplay icon={transaction.package.packageType.icon} className="h-5 w-5" />
+                        <CardTitle className="text-lg">{transaction.package.name}</CardTitle>
+                      </div>
+                      {getStatusBadge(transaction.status)}
                     </div>
-                    {getStatusBadge(transaction.status)}
+                    <CardDescription className="mt-2">Pelanggan: {transaction.customerName}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pb-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Reseller:</span>
+                        <span className="font-medium">{transaction.reseller.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tanggal Transaksi:</span>
+                        <span className="font-medium">{formatDate(transaction.createdAt)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Jumlah Minggu:</span>
+                        <span className="font-medium">{transaction.tenorWeeks} Minggu</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status Pembayaran:</span>
+                        <span className="font-medium">
+                          {paymentStatus.approvedCount}/{paymentStatus.totalCount} pembayaran
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <div className="px-6 pb-6">
+                    <Link href={`/admin/transactions/${transaction.id}`}>
+                      <Button variant="outline" className="w-full">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Lihat Detail
+                      </Button>
+                    </Link>
                   </div>
-                  <CardDescription className="mt-2">Pelanggan: {transaction.customerName}</CardDescription>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Reseller:</span>
-                      <span className="font-medium">{transaction.reseller.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tanggal Transaksi:</span>
-                      <span className="font-medium">{formatDate(transaction.createdAt)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Jumlah Minggu:</span>
-                      <span className="font-medium">{transaction.tenorWeeks} Minggu</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status Pembayaran:</span>
-                      <span className="font-medium">
-                        {paymentStatus.approvedCount}/{paymentStatus.totalCount} pembayaran
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-                <div className="px-6 pb-6">
-                  <Link href={`/admin/transactions/${transaction.id}`}>
-                    <Button variant="outline" className="w-full">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Lihat Detail
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+                </Card>
+              )
+            })}
+          </div>
+          <Pagination totalItems={totalCount} currentPage={currentPage} pageSize={pageSize} baseUrl={pathname} />
+        </>
       )}
     </div>
   )
